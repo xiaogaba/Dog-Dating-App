@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">firex</string>
+    <string name="title_activity_welcome">Map</string>
+    <string name="title_activity_google_maps_api">Map</string>
+</resources>
