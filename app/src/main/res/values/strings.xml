@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">firex</string>
     <string name="title_activity_welcome">Map</string>
-    <string name="title_activity_google_maps_api">Map</string>
+    <string name="google_direction_api">AIzaSyCos7PSj2745BJqOeuMLufh8CTq7ZSlh0w</string>
 </resources>

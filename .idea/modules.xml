@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/Dog-Dating-App.iml" filepath="$PROJECT_DIR$/Dog-Dating-App.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/firex.iml" filepath="$PROJECT_DIR$/firex.iml" />
     </modules>
   </component>
 </project>
