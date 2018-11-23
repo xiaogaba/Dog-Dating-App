@@ -25,7 +25,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.xin.firex.Common.Common;
-import com.example.xin.firex.Remote.IGoogleAPI;
+import com.example.xin.firex.remote.IGoogleAPI;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.github.glomadrian.materialanimatedswitch.MaterialAnimatedSwitch;
@@ -88,7 +88,7 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
     private static int FATEST_INTERVAL = 3000;
     private static int DISPLACEMENT = 10;
 
-    private PlaceAutocompleteFragment places;
+
 
     // car animation
     private List<LatLng> polyLineList;
@@ -98,6 +98,7 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
     private Handler handler;
     private LatLng startPosition, endPosition, currentPosition;
     private int index, next;
+    private PlaceAutocompleteFragment places;
     private String destination;
     private PolylineOptions polylineOptions, blackPolylineOptions;
     private Polyline blackPolyline, greyPolyline;
@@ -195,7 +196,6 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
             }
         });
 
-        polyLineList = new ArrayList<>();
 
         // Place API
         places = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
@@ -214,6 +214,28 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
             @Override
             public void onError(Status status) {
                 Toast.makeText(Welcome.this, ""+status.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        polyLineList = new ArrayList<>();
+
+        //Places API
+        places = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        places.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                if(location_switch.isChecked()){
+                    destination = place.getAddress().toString();
+                    destination = destination.replace("","+");
+                    getDirection();
+                }
+                else{
+                    Toast.makeText(Welcome.this,"Please change your status to ONLINE",Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onError(Status status) {
+                Toast.makeText(Welcome.this,""+status.toString(),Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -303,7 +325,7 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
 
                                 carMarker = mMap.addMarker(new MarkerOptions().position(currentPosition)
                                         .flat(true)
-                                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.car)));
+                                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.dog)));
 
                                 handler = new Handler();
                                 index = -1;
