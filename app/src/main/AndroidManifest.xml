@@ -39,6 +39,7 @@
         <activity
             android:name=".Welcome"
             android:label="@string/title_activity_welcome" />
+        <activity android:name=".message"/>
         <activity
             android:name=".google_maps_api"
             android:label="@string/title_activity_google_maps_api"></activity>

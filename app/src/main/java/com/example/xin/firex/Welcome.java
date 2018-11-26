@@ -3,6 +3,7 @@ package com.example.xin.firex;
 import android.Manifest;
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -74,8 +75,12 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
-        com.google.android.gms.location.LocationListener
-{
+        com.google.android.gms.location.LocationListener {
+
+    Button btnMessage, btncreatePlaydate;
+    final private String testUid = "MyvsPO4Zj7YvQxQaL4jqyBjnX7I2";
+
+
     private GoogleMap mMap;
     //Play Services
     private static final int MY_PERMISSION_REQUEST_CODE = 7000;
@@ -87,6 +92,8 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
     private static int UPDATE_INTERVAL = 5000;
     private static int FATEST_INTERVAL = 3000;
     private static int DISPLACEMENT = 10;
+
+    private String target_id = "34";
 
 
 
@@ -169,6 +176,25 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_welcome);
+
+
+        // Set up message onClick listener.
+        btnMessage = (Button) findViewById(R.id.btnMessage);
+        btnMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent intent = new Intent(Welcome.this, message.class);
+                //TODO: user id should be passed in from main activity.
+                intent.putExtra("user_id", "12");
+                //TODO: if target_id==null, will not allow user to enter message activity
+                intent.putExtra("target_id", target_id);
+                startActivity(intent);
+            }
+        });
+
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
