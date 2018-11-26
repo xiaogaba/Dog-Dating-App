@@ -21,13 +21,16 @@ import android.view.View;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.xin.firex.Common.Common;
+import com.example.xin.firex.Model.User;
 import com.example.xin.firex.remote.IGoogleAPI;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
+import com.firebase.geofire.GeoQuery;
+import com.firebase.geofire.GeoQueryEventListener;
 import com.github.glomadrian.materialanimatedswitch.MaterialAnimatedSwitch;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -36,7 +39,6 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdate;
@@ -55,9 +57,11 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.model.SquareCap;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -89,6 +93,10 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
     private static int DISPLACEMENT = 10;
 
 
+    // Bottom sheet
+    ImageView imgExpandable;
+    BottomSheetUserFragment mBottomSheet;
+    //Button btnFindUsers;  is equal to Button btnPickupRequest
 
     // car animation
     private List<LatLng> polyLineList;
@@ -165,6 +173,16 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
     MaterialAnimatedSwitch location_switch;
     SupportMapFragment mapFragment;
 
+
+    // Find nearby drivers
+    boolean isUserFound = false;
+    String userID = "";
+    int radius = 1;     // 1km
+    int distance = 1;   // 1km
+    private static final int LIMIT = 3;
+    Button btnRequestDate;     // equal to Button btnPickupRequest
+    Marker mUserMarker;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -239,13 +257,134 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
             }
         });
 
+
+
         //Geo Fire
-        drivers = FirebaseDatabase.getInstance().getReference("Drivers");
+        // drivers mean users here
+        drivers = FirebaseDatabase.getInstance().getReference(Common.user_location_tb1);
         geoFire = new GeoFire(drivers);
+
+
+
+        mService = Common.getGoogleAPI();
+
+        // Init view of bottom sheet
+        imgExpandable = (ImageView)findViewById(R.id.imgExpandable);
+        mBottomSheet = BottomSheetUserFragment.newInstance("User bottom sheet");
+        imgExpandable.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mBottomSheet.show(getSupportFragmentManager(),mBottomSheet.getTag());
+            }
+        });
+
+        // TODO
+        // Find the closest user and message this guy
+        btnRequestDate = (Button) findViewById(R.id.btn_request_date);
+        btnRequestDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+
+
+                requestDateHere(FirebaseAuth.getInstance().getCurrentUser().getUid());
+
+
+
+            }
+
+
+
+        });
 
         setUpLocation();
 
-        mService = Common.getGoogleAPI();
+
+    }
+
+    // TODO
+    // Related with 'find nearby users'
+    // part 7 21:26 and part 6
+    // requestDateHere is equal with requestPickupHere
+    private void requestDateHere(String uid) {
+
+        // Todo: might have issues here
+
+        DatabaseReference dbRequest = FirebaseDatabase.getInstance().getReference(Common.date_request_tb1);
+        GeoFire mGeoFire = new GeoFire(dbRequest);
+        mGeoFire.setLocation(uid, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
+
+        if(mUserMarker.isVisible())
+            mUserMarker.remove();
+        // Add nre marker
+        mUserMarker = mMap.addMarker(new MarkerOptions()
+                .title("Date Here")
+                .snippet("")
+                .position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+        );
+
+        // Todo: show info
+        mUserMarker.showInfoWindow();
+
+        // Todo: show more info
+        btnRequestDate.setText("Looking for Nearby Users...");
+
+        findUser();
+
+
+    }
+
+    private void findUser() {
+
+        DatabaseReference users = FirebaseDatabase.getInstance().getReference(Common.user_location_tb1);
+        GeoFire gfUsers = new GeoFire(users);
+        GeoQuery geoQuery = gfUsers.queryAtLocation(new GeoLocation(mLastLocation.getLatitude(),mLastLocation.getLongitude()),radius);
+        geoQuery.removeAllListeners();
+
+        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+
+            @Override
+            public void onKeyEntered(String key, GeoLocation location) {
+
+                if(!isUserFound) {
+
+                    isUserFound = true;
+                    userID = key;
+                    btnRequestDate.setText("Message");
+                    Toast.makeText(Welcome.this,""+key,Toast.LENGTH_SHORT);
+
+                }
+
+            }
+
+            @Override
+            public void onKeyExited(String key) {
+
+            }
+
+            @Override
+            public void onKeyMoved(String key, GeoLocation location) {
+
+            }
+
+            @Override
+            public void onGeoQueryReady() {
+
+                // if still not found driver, increase distance
+                if(!isUserFound) {
+
+                    radius++;
+                    findUser();
+                }
+
+            }
+
+            @Override
+            public void onGeoQueryError(DatabaseError error) {
+
+            }
+        });
 
     }
 
@@ -467,32 +606,95 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
         }
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if(mLastLocation != null){
-            if(location_switch.isChecked()){
-                final double latitude = mLastLocation.getLatitude();
-                final double longtitude = mLastLocation.getLongitude();
 
-                //update to firebase
-                geoFire.setLocation(FirebaseAuth.getInstance().getCurrentUser().getUid(), new GeoLocation(latitude, longtitude), new GeoFire.CompletionListener() {
-                            @Override
-                            public void onComplete(String key, DatabaseError error) {
-                                //Add marker
-                                if(mCurrent != null)
-                                    mCurrent.remove(); //remove already marker
-                                mCurrent = mMap.addMarker(new MarkerOptions()
+
+            final double latitude = mLastLocation.getLatitude();
+            final double longtitude = mLastLocation.getLongitude();
+
+            if(mCurrent != null)
+                mCurrent.remove(); //remove already marker
+            mCurrent = mMap.addMarker(new MarkerOptions()
                                         .position(new LatLng(latitude,longtitude))
                                         .title("Your Location"));
 
-                                //Move camera to this position
-                                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude,longtitude),15.0f));
+            //Move camera to this position
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude,longtitude),15.0f));
 
-                            }
-                        }
-                );
-            }
+            loadAllAvailableUser();
+
+            Log.d("Error",String.format("Your location was changed : %f / %f", latitude, longtitude));
+
         }
         else{
             Log.d("Error","Can not get your location");
         }
+    }
+
+    private void loadAllAvailableUser() {
+
+        // Load all available users in distance 3km
+        DatabaseReference userLocation = FirebaseDatabase.getInstance().getReference(Common.user_location_tb1);
+        GeoFire gf = new GeoFire(userLocation);
+
+        GeoQuery geoQuery = gf.queryAtLocation(new GeoLocation(mLastLocation.getLatitude(),mLastLocation.getLongitude()),distance);
+        geoQuery.removeAllListeners();
+
+        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+            @Override
+            public void onKeyEntered(String key, final GeoLocation location) {
+
+                FirebaseDatabase.getInstance().getReference(Common.user_info_tb1)
+                        .child(key).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                        User user = dataSnapshot.getValue(User.class);
+
+                        // add user to map
+
+                        mMap.addMarker(new MarkerOptions().
+                                position(new LatLng(location.latitude,location.longitude))
+                                .flat(true)
+                                .title(user.getName())
+                                .snippet("Phone: " + user.getPhone())
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.dog)));
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+
+            }
+
+            @Override
+            public void onKeyExited(String key) {
+
+            }
+
+            @Override
+            public void onKeyMoved(String key, GeoLocation location) {
+
+            }
+
+            @Override
+            public void onGeoQueryReady() {
+
+                if(distance <= LIMIT) {
+
+                    distance++;
+                    loadAllAvailableUser();
+                }
+
+            }
+
+            @Override
+            public void onGeoQueryError(DatabaseError error) {
+
+            }
+        });
     }
 
     private void rotateMarker(final Marker mCurrent, final int i, GoogleMap mMap) {
@@ -537,7 +739,6 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
         mMap.setBuildingsEnabled(false);
         mMap.getUiSettings().setZoomControlsEnabled(true);
     }
-
 
 
     @Override

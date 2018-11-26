@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
+import com.example.xin.firex.Common.Common;
 import com.example.xin.firex.Model.User;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -56,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         //init Firebase
         auth = FirebaseAuth.getInstance();
         db = FirebaseDatabase.getInstance();
-        users = db.getReference("Users");
+        users = db.getReference(Common.user_info_tb1);
 
         btnRegister=(Button)findViewById(R.id.btnRegister);
         btnSignIn=(Button)findViewById(R.id.btnSignIn);
