@@ -3,7 +3,9 @@ package com.example.xin.firex;
 import android.Manifest;
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
@@ -13,10 +15,16 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
@@ -183,10 +191,37 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
     Button btnRequestDate;     // equal to Button btnPickupRequest
     Marker mUserMarker;
 
+    // Navigation Drawer
+    private NavigationView navigationView;
+    private DrawerLayout drawer;
+    private Toolbar toolbar;
+
+    public static int navItemIndex = 0;
+
+    private static final String TAG_HOME = "home";
+    private static final String TAG_CREATEPLAYDATE = "createplaydate";
+    private static final String TAG_PROFILE = "profile";
+    private static final String TAG_MYPLAYDATES = "myplaydates";
+    private static final String TAG_ACCOUNTSETTINGS = "accountsettings";
+    private static final String TAG_ADDDOG = "adddog";
+    private static final String TAG_SCHEDULEPLAYDATE = "scheduleplaydate";
+
+    private Fragment fragment;
+    public static String CURRENT_TAG = TAG_HOME;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_welcome);
+        setContentView(R.layout.activity_home_nav_drawer);
+
+        toolbar = findViewById(R.id.toolbar);
+        drawer = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.nav_view);
+
+        if(drawer != null)
+            setUpNavigationView();
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -299,6 +334,101 @@ public class Welcome extends FragmentActivity implements OnMapReadyCallback,
 
         setUpLocation();
 
+
+    }
+
+    private void selectNavMenu(int navItemIndex) {
+        navigationView.getMenu().getItem(navItemIndex).setChecked(false);
+        navigationView.getMenu().getItem(0).setChecked(true);
+        if (drawer != null)
+            drawer.closeDrawers();
+    }
+
+    private void setUpNavigationView() {
+        navigationView.setNavigationItemSelectedListener(
+                new NavigationView.OnNavigationItemSelectedListener() {
+
+                    @Override
+                    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                        switch (menuItem.getItemId()) {
+                            case R.id.navI_home:
+                                navigationView.getMenu().getItem(navItemIndex).setChecked(false);
+                                navItemIndex = 0;
+                                selectNavMenu(navItemIndex);
+                                CURRENT_TAG = TAG_HOME;
+                                break;
+                            case R.id.navI_userprofile:
+                                navigationView.getMenu().getItem(navItemIndex).setChecked(false);
+                                navItemIndex = 1;
+                                selectNavMenu(navItemIndex);
+                                Intent go = new Intent(Welcome.this, HomeActivity.class);
+                                go.putExtra("index", 1);
+                                startActivity(go);
+                                break;
+                            case R.id.navI_makeplaydate:
+                                navigationView.getMenu().getItem(navItemIndex).setChecked(false);
+                                navItemIndex = 2;
+                                selectNavMenu(navItemIndex);
+                                Intent go1 = new Intent(Welcome.this, HomeActivity.class);
+                                go1.putExtra("index", 2);
+                                startActivity(go1);
+                                break;
+                            case R.id.navI_playdates:
+                                navigationView.getMenu().getItem(navItemIndex).setChecked(false);
+                                navItemIndex = 3;
+                                selectNavMenu(navItemIndex);
+                                Intent go2 = new Intent(Welcome.this, HomeActivity.class);
+                                go2.putExtra("index", 3);
+                                startActivity(go2);
+                                break;
+                            case R.id.navI_settings:
+                                navigationView.getMenu().getItem(navItemIndex).setChecked(false);
+                                navItemIndex = 4;
+                                selectNavMenu(navItemIndex);
+                                Intent go3 = new Intent(Welcome.this, HomeActivity.class);
+                                go3.putExtra("index", 4);
+                                startActivity(go3);
+                                break;
+                            case R.id.action_logout:
+                                /*
+                                    TODO: Change to Logout user
+                                */
+                                // GO TO LOGIN SCREEN
+                                Toast.makeText(getApplicationContext(), "Log out user", Toast.LENGTH_SHORT).show();
+                                navigationView.getMenu().getItem(navItemIndex).setChecked(false);
+                                navItemIndex = 5;
+                                selectNavMenu(navItemIndex);
+                                Intent go4 = new Intent(Welcome.this, HomeActivity.class);
+                                go4.putExtra("index", 5);
+                                startActivity(go4);
+                                break;
+                            default:
+                                navItemIndex = 0;
+                                selectNavMenu(navItemIndex);
+                        }
+
+                        return true;
+                    }
+                });
+
+        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.openDrawer, R.string.closeDrawer) {
+
+                @Override
+                public void onDrawerClosed(View drawerView) {
+                    super.onDrawerClosed(drawerView);
+                }
+
+                @Override
+                public void onDrawerOpened(View drawerView) {
+                    super.onDrawerOpened(drawerView);
+                }
+            };
+
+            drawer.setDrawerListener(actionBarDrawerToggle);
+
+            actionBarDrawerToggle.syncState();
+        }
 
     }
 
