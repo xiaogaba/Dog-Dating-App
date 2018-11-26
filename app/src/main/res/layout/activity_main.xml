@@ -15,7 +15,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
         <TextView
-            android:text="D O G G I E"
+            android:text="@string/mainactivitytitle"
             android:textStyle="bold"
             android:textSize="36dp"
             android:textAlignment="center"
@@ -34,12 +34,13 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="20dp"
         android:layout_marginTop="20dp"
-        android:text="DOG DATING APP"
+
         android:textSize="12sp"
         android:textAlignment="center"
         android:textColor="@color/bottomText"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"/>
+    <!--       android:text="DOG DATING APP" -->
 
     <LinearLayout
         android:orientation="horizontal"
@@ -66,9 +67,10 @@
             android:layout_marginLeft="6dp"
             android:layout_weight="1"
             android:background="@drawable/temp"
-            android:onClick="onCLick"
+
             android:text="REGISTER"
             android:textColor="@android:color/white" />
+        <!-- android:onClick="onClick" -->
     </LinearLayout>
 
 
